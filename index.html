@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wall Fusion — Graffiti & Impressão Vertical</title>
+  <meta name="description" content="Transformamos paredes em experiências visuais únicas. Arte urbana autêntica encontra tecnologia de impressão vertical para espaços comerciais e públicos.">
+  <meta property="og:title" content="Wall Fusion — Graffiti & Impressão Vertical">
+  <meta property="og:description" content="Criamos murais únicos que transformam espaços comerciais e públicos.">
+  <meta property="og:url" content="https://wallfusion.blog">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── RESET & BASE ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    :root {
+      --bg:         #080808;
+      --bg-2:       #0F0F0F;
+      --bg-3:       #161616;
+      --bg-4:       #1E1E1E;
+      --text:       #EDEAE5;
+      --text-muted: #7A7770;
+      --text-dim:   #3E3D3B;
+      --accent:     #F25C1E;
+      --accent-h:   #FF7A3D;
+      --gold:       #D4A843;
+      --border:     rgba(237,234,229,0.07);
+      --border-acc: rgba(242,92,30,0.25);
+      --font-d:     'Syne', sans-serif;
+      --font-b:     'Outfit', sans-serif;
+      --ease:       cubic-bezier(.22,.68,0,1.2);
+      --ease-out:   cubic-bezier(.16,1,.3,1);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-b);
+      font-weight: 400;
+      line-height: 1.6;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── GRAIN OVERLAY ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      opacity: 0.025;
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* ── CUSTOM CURSOR ── */
+    #cur { position:fixed;width:8px;height:8px;background:var(--accent);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .1s,background .2s;mix-blend-mode:screen; }
+    #cur-f { position:fixed;width:32px;height:32px;border:1px solid rgba(242,92,30,.5);border-radius:50%;pointer-events:none;z-index:9997;transform:translate(-50%,-50%);transition:transform .08s linear,width .3s var(--ease),height .3s var(--ease),border-color .3s; }
+    body:has(a:hover) #cur-f, body:has(button:hover) #cur-f { width:52px;height:52px;border-color:var(--accent); }
+
+    /* ── TYPOGRAPHY ── */
+    .label {
+      font-family: var(--font-d);
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .label::before { content: ''; display: block; width: 20px; height: 1px; background: var(--accent); }
+
+    h1, h2, h3, h4 { font-family: var(--font-d); line-height: 1.1; }
+
+    .section-title {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      margin-top: .6rem;
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal { opacity: 0; transform: translateY(36px); transition: opacity .7s var(--ease-out), transform .7s var(--ease-out); }
+    .reveal.visible { opacity: 1; transform: none; }
+    .reveal-delay-1 { transition-delay: .1s; }
+    .reveal-delay-2 { transition-delay: .2s; }
+    .reveal-delay-3 { transition-delay: .3s; }
+    .reveal-delay-4 { transition-delay: .4s; }
+    .reveal-delay-5 { transition-delay: .5s; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      padding: 1.2rem 5vw;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background .4s, backdrop-filter .4s, border-color .4s;
+      border-bottom: 1px solid transparent;
+    }
+    nav.scrolled {
+      background: rgba(8,8,8,.85);
+      backdrop-filter: blur(18px);
+      border-color: var(--border);
+    }
+    .nav-logo {
+      font-family: var(--font-d);
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: .08em;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      list-style: none;
+    }
+    .nav-links a {
+      font-family: var(--font-b);
+      font-size: .8rem;
+      font-weight: 400;
+      letter-spacing: .06em;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      font-family: var(--font-b);
+      font-size: .78rem;
+      font-weight: 600;
+      padding: .55rem 1.4rem;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 2px;
+      text-decoration: none;
+      transition: background .2s, transform .2s;
+      letter-spacing: .04em;
+    }
+    .nav-cta:hover { background: var(--accent-h); transform: translateY(-1px); }
+    .nav-burger { display: none; flex-direction: column; gap: 4px; cursor: pointer; padding: 4px; }
+    .nav-burger span { display: block; width: 22px; height: 1.5px; background: var(--text); transition: .3s; }
+
+    /* ── HERO ── */
+    #hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 5vw 7vh;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 75% 40%, rgba(242,92,30,.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 50% at 20% 70%, rgba(212,168,67,.04) 0%, transparent 50%),
+        var(--bg);
+    }
+    .hero-lines {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(242,92,30,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(242,92,30,.04) 1px, transparent 1px);
+      background-size: 80px 80px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+    .hero-content { position: relative; z-index: 2; max-width: 1200px; }
+    .hero-tag { margin-bottom: 1.5rem; }
+    .hero-title {
+      font-family: var(--font-d);
+      font-weight: 800;
+      font-size: clamp(4.5rem, 13vw, 12rem);
+      line-height: .95;
+      letter-spacing: -.02em;
+    }
+    .hero-title .line-2 { color: var(--accent); display: block; }
+    .hero-sub {
+      margin-top: 2rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 4rem;
+      flex-wrap: wrap;
+    }
+    .hero-sub-left {
+      max-width: 480px;
+    }
+    .hero-tagline {
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .hero-tagline strong { color: var(--text); font-weight: 500; }
+    .hero-ctas {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      font-family: var(--font-b);
+      font-size: .85rem;
+      font-weight: 600;
+      padding: .85rem 2rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background .2s, transform .2s var(--ease);
+      letter-spacing: .04em;
+    }
+    .btn-primary:hover { background: var(--accent-h); transform: translateY(-2px); }
+    .btn-outline {
+      font-family: var(--font-b);
+      font-size: .85rem;
+      font-weight: 500;
+      padding: .85rem 2rem;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: border-color .2s, color .2s, transform .2s var(--ease);
+      letter-spacing: .04em;
+    }
+    .btn-outline:hover { border-color: var(--text-muted); transform: translateY(-2px); }
+    .hero-stats {
+      display: flex;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .hero-stat { display: flex; flex-direction: column; gap: .2rem; }
+    .hero-stat-n {
+      font-family: var(--font-d);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .hero-stat-n span { color: var(--accent); }
+    .hero-stat-l {
+      font-size: .72rem;
+      color: var(--text-muted);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .hero-scroll {
+      position: absolute;
+      bottom: 2.5rem;
+      right: 5vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .5rem;
+      z-index: 2;
+    }
+    .hero-scroll span {
+      font-size: .65rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      writing-mode: vertical-rl;
+    }
+    .hero-scroll-line {
+      width: 1px;
+      height: 50px;
+      background: linear-gradient(to bottom, var(--accent), transparent);
+      animation: scrollLine 2s ease-in-out infinite;
+    }
+    @keyframes scrollLine { 0%,100%{transform:scaleY(1);opacity:1} 50%{transform:scaleY(.5);opacity:.4} }
+
+    /* ── TICKER ── */
+    .ticker {
+      background: var(--accent);
+      padding: .7rem 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .ticker-inner {
+      display: inline-flex;
+      animation: ticker 30s linear infinite;
+    }
+    .ticker-inner:hover { animation-play-state: paused; }
+    .ticker-item {
+      font-family: var(--font-d);
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: #fff;
+      padding: 0 2.5rem;
+    }
+    .ticker-dot { color: rgba(255,255,255,.5); }
+    @keyframes ticker { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+    /* ── SECTIONS ── */
+    section { padding: clamp(5rem, 10vw, 9rem) 5vw; }
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    /* ── SOBRE ── */
+    #sobre .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+    }
+    .sobre-text p {
+      font-size: clamp(1rem, 1.5vw, 1.15rem);
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.8;
+      margin-top: 1.5rem;
+    }
+    .sobre-text p strong { color: var(--text); font-weight: 500; }
+    .sobre-text p + p { margin-top: 1rem; }
+    .sobre-visual {
+      position: relative;
+    }
+    .sobre-card {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .sobre-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+    .sobre-card-quote {
+      font-family: var(--font-d);
+      font-size: 3.5rem;
+      color: var(--accent);
+      line-height: 1;
+      opacity: .3;
+      margin-bottom: .5rem;
+    }
+    .sobre-card-text {
+      font-family: var(--font-d);
+      font-size: 1.2rem;
+      font-weight: 600;
+      line-height: 1.5;
+      color: var(--text);
+    }
+    .sobre-card-author {
+      margin-top: 1.5rem;
+      font-size: .78rem;
+      color: var(--text-muted);
+      letter-spacing: .06em;
+    }
+    .sobre-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .6rem;
+      margin-top: 2rem;
+    }
+    .tag {
+      font-size: .72rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .35rem .9rem;
+      border: 1px solid var(--border-acc);
+      border-radius: 2px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ── SERVIÇOS ── */
+    #servicos { background: var(--bg-2); }
+    .servicos-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 3.5rem;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+    .servicos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .service-card {
+      background: var(--bg-2);
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: background .3s;
+    }
+    .service-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 0; height: 2px;
+      background: var(--accent);
+      transition: width .4s var(--ease-out);
+    }
+    .service-card:hover { background: var(--bg-3); }
+    .service-card:hover::after { width: 100%; }
+    .service-icon {
+      width: 44px; height: 44px;
+      background: rgba(242,92,30,.1);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      transition: background .3s;
+    }
+    .service-card:hover .service-icon { background: rgba(242,92,30,.2); }
+    .service-icon svg { width: 20px; height: 20px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+    .service-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: .7rem;
+    }
+    .service-card p {
+      font-size: .88rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .service-num {
+      position: absolute;
+      top: 1.5rem; right: 2rem;
+      font-family: var(--font-d);
+      font-size: .65rem;
+      font-weight: 800;
+      color: var(--text-dim);
+      letter-spacing: .1em;
+    }
+
+    /* ── DIFERENCIAIS ── */
+    #diferenciais .container {
+      display: grid;
+      grid-template-columns: .8fr 1fr;
+      gap: 8rem;
+      align-items: start;
+    }
+    .dif-sticky {
+      position: sticky;
+      top: 8rem;
+    }
+    .dif-title { margin-top: .6rem; }
+    .dif-description {
+      margin-top: 1.5rem;
+      font-size: .95rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+    .dif-list { display: flex; flex-direction: column; gap: 0; }
+    .dif-item {
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 3rem 1fr;
+      gap: 1.5rem;
+      align-items: start;
+      transition: background .2s;
+    }
+    .dif-item:first-child { border-top: 1px solid var(--border); }
+    .dif-num {
+      font-family: var(--font-d);
+      font-size: .75rem;
+      font-weight: 800;
+      color: var(--accent);
+      padding-top: .2rem;
+      letter-spacing: .05em;
+    }
+    .dif-content h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: .5rem;
+    }
+    .dif-content p {
+      font-size: .88rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.75;
+    }
+
+    /* ── PROCESSO ── */
+    #processo { background: var(--bg-2); }
+    .processo-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      margin-top: 4rem;
+      position: relative;
+    }
+    .processo-steps::before {
+      content: '';
+      position: absolute;
+      top: 2.2rem;
+      left: calc(1/8 * 100%);
+      right: calc(1/8 * 100%);
+      height: 1px;
+      background: var(--border);
+    }
+    .processo-step {
+      padding: 0 1.5rem;
+      position: relative;
+    }
+    .step-num {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-d);
+      font-size: .78rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      margin-bottom: 1.8rem;
+      transition: background .3s, border-color .3s, color .3s;
+      position: relative;
+      z-index: 1;
+    }
+    .processo-step.active .step-num,
+    .processo-step:hover .step-num {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .processo-step h3 {
+      font-size: .95rem;
+      font-weight: 700;
+      margin-bottom: .6rem;
+    }
+    .processo-step p {
+      font-size: .83rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .step-badge {
+      display: inline-block;
+      font-size: .62rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: .2rem .6rem;
+      background: rgba(242,92,30,.1);
+      color: var(--accent);
+      border-radius: 2px;
+      margin-bottom: .8rem;
+      font-weight: 600;
+    }
+
+    /* ── PORTFÓLIO ── */
+    .portfolio-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .portfolio-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: auto;
+      gap: 1rem;
+    }
+    .portfolio-item {
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-3);
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .portfolio-item:nth-child(1) { grid-column: span 7; grid-row: span 2; aspect-ratio: auto; min-height: 440px; }
+    .portfolio-item:nth-child(2) { grid-column: span 5; min-height: 210px; }
+    .portfolio-item:nth-child(3) { grid-column: span 5; min-height: 210px; }
+    .portfolio-item:nth-child(4) { grid-column: span 4; min-height: 280px; }
+    .portfolio-item:nth-child(5) { grid-column: span 4; min-height: 280px; }
+    .portfolio-item:nth-child(6) { grid-column: span 4; min-height: 280px; }
+
+    .portfolio-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform .6s var(--ease-out), filter .4s;
+      filter: saturate(.8) brightness(.9);
+    }
+    .portfolio-item:hover .portfolio-img {
+      transform: scale(1.05);
+      filter: saturate(1) brightness(1);
+    }
+    .portfolio-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(8,8,8,.85) 0%, transparent 50%);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 1.8rem;
+      opacity: 0;
+      transition: opacity .35s;
+    }
+    .portfolio-item:hover .portfolio-overlay { opacity: 1; }
+    .portfolio-overlay h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: .3rem;
+    }
+    .portfolio-overlay span {
+      font-size: .72rem;
+      color: var(--accent);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .portfolio-cat {
+      position: absolute;
+      top: 1rem; left: 1rem;
+      font-size: .62rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: .25rem .7rem;
+      background: rgba(8,8,8,.7);
+      color: var(--text-muted);
+      border-radius: 2px;
+      font-weight: 600;
+      backdrop-filter: blur(8px);
+    }
+    /* Placeholder gradients for portfolio items */
+    .pf-grad-1 { background: linear-gradient(135deg, #1a0a00 0%, #3d1500 40%, #1a0a00 100%); }
+    .pf-grad-2 { background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3d 40%, #0a0a1a 100%); }
+    .pf-grad-3 { background: linear-gradient(135deg, #0a1a0a 0%, #1a3d1a 40%, #0a1a0a 100%); }
+    .pf-grad-4 { background: linear-gradient(135deg, #1a1000 0%, #3d2a00 40%, #1a1000 100%); }
+    .pf-grad-5 { background: linear-gradient(135deg, #1a000a 0%, #3d0015 40%, #1a000a 100%); }
+    .pf-grad-6 { background: linear-gradient(135deg, #001a1a 0%, #003d3d 40%, #001a1a 100%); }
+    .pf-placeholder {
+      width: 100%; height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-d);
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: rgba(255,255,255,.05);
+      letter-spacing: -.02em;
+      min-height: inherit;
+    }
+
+    /* ── TESTEMUNHOS ── */
+    #testemunhos { background: var(--bg-2); }
+    .tst-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 3.5rem;
+    }
+    .tst-card {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2.2rem;
+      position: relative;
+      transition: border-color .3s, transform .3s var(--ease);
+    }
+    .tst-card:hover { border-color: var(--border-acc); transform: translateY(-4px); }
+    .tst-quote-icon {
+      font-family: Georgia, serif;
+      font-size: 4rem;
+      line-height: .8;
+      color: var(--accent);
+      opacity: .25;
+      margin-bottom: .8rem;
+      display: block;
+    }
+    .tst-text {
+      font-size: .93rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.8;
+      font-style: italic;
+    }
+    .tst-author {
+      margin-top: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+    }
+    .tst-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--bg-4);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-d);
+      font-size: .75rem;
+      font-weight: 800;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .tst-info { display: flex; flex-direction: column; }
+    .tst-name { font-size: .85rem; font-weight: 600; color: var(--text); }
+    .tst-role { font-size: .72rem; color: var(--text-muted); letter-spacing: .04em; }
+    .tst-stars { color: var(--gold); font-size: .75rem; letter-spacing: .1em; margin-bottom: .5rem; }
+
+    /* ── CONTACTO ── */
+    #contacto {
+      position: relative;
+      overflow: hidden;
+    }
+    #contacto::before {
+      content: '';
+      position: absolute;
+      top: -200px; right: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(242,92,30,.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .contacto-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: start;
+    }
+    .contacto-left h2 { margin-top: .6rem; }
+    .contacto-left p {
+      margin-top: 1.5rem;
+      font-size: .95rem;
+      font-weight: 300;
+      color: var(--text-muted);
+      line-height: 1.8;
+    }
+    .contact-info {
+      margin-top: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .contact-info-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: .88rem;
+      color: var(--text-muted);
+    }
+    .contact-info-item a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
+    .contact-info-item a:hover { color: var(--accent); }
+    .contact-info-icon {
+      width: 36px; height: 36px;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .contact-info-icon svg { width: 14px; height: 14px; stroke: var(--accent); fill: none; stroke-width: 1.5; }
+
+    .contact-form { display: flex; flex-direction: column; gap: 1rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: .4rem; }
+    .form-group label {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: .85rem 1rem;
+      color: var(--text);
+      font-family: var(--font-b);
+      font-size: .88rem;
+      font-weight: 400;
+      outline: none;
+      transition: border-color .2s;
+      -webkit-appearance: none;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: var(--accent); }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: var(--text-dim); }
+    .form-group textarea { resize: vertical; min-height: 120px; }
+    .form-group select option { background: var(--bg-3); }
+    .form-check {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      padding: 1rem;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    .form-check:hover { border-color: var(--border-acc); }
+    .form-check input[type="checkbox"] {
+      width: 16px; height: 16px;
+      min-width: 16px;
+      accent-color: var(--accent);
+      margin-top: 2px;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+    }
+    .form-check-text { font-size: .83rem; color: var(--text-muted); line-height: 1.5; }
+    .form-check-text strong { color: var(--text); font-weight: 600; }
+    .form-submit { margin-top: .5rem; }
+    .btn-submit {
+      width: 100%;
+      padding: 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      font-family: var(--font-b);
+      font-size: .9rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: background .2s, transform .2s var(--ease);
+    }
+    .btn-submit:hover { background: var(--accent-h); transform: translateY(-2px); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 5vw;
+      background: var(--bg);
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .footer-logo {
+      font-family: var(--font-d);
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: .06em;
+    }
+    .footer-logo span { color: var(--accent); }
+    .footer-links {
+      display: flex;
+      gap: 1.8rem;
+      list-style: none;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      font-size: .78rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color .2s;
+      letter-spacing: .04em;
+    }
+    .footer-links a:hover { color: var(--text); }
+    .footer-social {
+      display: flex;
+      gap: .7rem;
+    }
+    .social-btn {
+      width: 36px; height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .2s, background .2s;
+      text-decoration: none;
+    }
+    .social-btn:hover { border-color: var(--accent); background: rgba(242,92,30,.08); }
+    .social-btn svg { width: 14px; height: 14px; stroke: var(--text-muted); fill: none; stroke-width: 1.5; }
+    .social-btn:hover svg { stroke: var(--accent); }
+    .footer-copy {
+      width: 100%;
+      text-align: center;
+      font-size: .72rem;
+      color: var(--text-dim);
+      letter-spacing: .08em;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      margin-top: 1.5rem;
+    }
+
+    /* ── MOBILE MENU ── */
+    .nav-mobile {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 2rem;
+      transform: translateX(100%);
+      transition: transform .4s var(--ease-out);
+    }
+    .nav-mobile.open { transform: translateX(0); }
+    .nav-mobile a {
+      font-family: var(--font-d);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .nav-mobile a:hover { color: var(--accent); }
+    .nav-close {
+      position: absolute;
+      top: 1.5rem; right: 5vw;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 960px) {
+      #sobre .container { grid-template-columns: 1fr; gap: 3rem; }
+      .dif-sticky { position: static; }
+      #diferenciais .container { grid-template-columns: 1fr; gap: 3rem; }
+      .servicos-grid { grid-template-columns: repeat(2, 1fr); }
+      .processo-steps { grid-template-columns: repeat(2, 1fr); gap: 2.5rem; }
+      .processo-steps::before { display: none; }
+      .tst-grid { grid-template-columns: 1fr; }
+      .contacto-inner { grid-template-columns: 1fr; gap: 3rem; }
+    }
+
+    @media (max-width: 700px) {
+      .nav-links, .nav-cta { display: none; }
+      .nav-burger { display: flex; cursor: pointer; }
+      body { cursor: auto; }
+      #cur, #cur-f { display: none; }
+      .servicos-grid { grid-template-columns: 1fr; }
+      .portfolio-item:nth-child(1) { grid-column: span 12; min-height: 280px; }
+      .portfolio-item:nth-child(2),
+      .portfolio-item:nth-child(3) { grid-column: span 12; min-height: 200px; }
+      .portfolio-item:nth-child(4),
+      .portfolio-item:nth-child(5),
+      .portfolio-item:nth-child(6) { grid-column: span 12; min-height: 200px; }
+      .processo-steps { grid-template-columns: 1fr; }
+      .hero-title { font-size: clamp(3.5rem, 18vw, 6rem); }
+      .form-row { grid-template-columns: 1fr; }
+      .footer-inner { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cur"></div>
+<div id="cur-f"></div>
+
+<!-- MOBILE MENU -->
+<div class="nav-mobile" id="navMobile">
+  <button class="nav-close" id="navClose" aria-label="Fechar menu">✕</button>
+  <a href="#sobre" onclick="closeMobileMenu()">Sobre</a>
+  <a href="#servicos" onclick="closeMobileMenu()">Serviços</a>
+  <a href="#processo" onclick="closeMobileMenu()">Processo</a>
+  <a href="#portfolio" onclick="closeMobileMenu()">Portfólio</a>
+  <a href="#contacto" onclick="closeMobileMenu()" style="color:var(--accent)">Contacto</a>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a href="#" class="nav-logo">WALL<span>F</span>USION</a>
+  <ul class="nav-links">
+    <li><a href="#sobre">Sobre</a></li>
+    <li><a href="#servicos">Serviços</a></li>
+    <li><a href="#processo">Processo</a></li>
+    <li><a href="#portfolio">Portfólio</a></li>
+  </ul>
+  <a href="#contacto" class="nav-cta">Consulta Gratuita</a>
+  <div class="nav-burger" id="navBurger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-lines"></div>
+  <div class="hero-content">
+    <div class="hero-tag reveal">
+      <span class="label">Criador de Ambientes</span>
+    </div>
+    <h1 class="hero-title reveal reveal-delay-1">
+      WALL<span class="line-2">FUSION</span>
+    </h1>
+    <div class="hero-sub">
+      <div class="hero-sub-left reveal reveal-delay-2">
+        <p class="hero-tagline">
+          A combinação única de <strong>arte urbana manual</strong> e
+          <strong>tecnologia de impressão vertical</strong> para transformar
+          espaços comerciais e públicos em experiências visuais inesquecíveis.
+        </p>
+        <div class="hero-ctas">
+          <a href="#portfolio" class="btn-primary">Ver Portfólio</a>
+          <a href="#contacto" class="btn-outline">Consulta Gratuita</a>
+        </div>
+      </div>
+      <div class="hero-stats reveal reveal-delay-3">
+        <div class="hero-stat">
+          <span class="hero-stat-n">15<span>+</span></span>
+          <span class="hero-stat-l">Projetos</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-n">100<span>%</span></span>
+          <span class="hero-stat-l">Exclusivo</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-n">2<span>×</span></span>
+          <span class="hero-stat-l">Técnicas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <div class="hero-scroll-line"></div>
+    <span>scroll</span>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-inner">
+    <span class="ticker-item">Graffiti Manual</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Impressão Vertical</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Branding Corporativo</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Murais Urbanos</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Espaços Comerciais</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Hotelaria & Restauração</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Graffiti Manual</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Impressão Vertical</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Branding Corporativo</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Murais Urbanos</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Espaços Comerciais</span><span class="ticker-item ticker-dot">·</span>
+    <span class="ticker-item">Hotelaria & Restauração</span><span class="ticker-item ticker-dot">·</span>
+  </div>
+</div>
+
+<!-- SOBRE -->
+<section id="sobre">
+  <div class="container">
+    <div class="sobre-text">
+      <span class="label reveal">O Serviço</span>
+      <h2 class="section-title reveal reveal-delay-1">
+        Arte que valoriza.<br>Tecnologia que executa.
+      </h2>
+      <p class="reveal reveal-delay-2">
+        <strong>Wall Fusion</strong> é um serviço pioneiro que combina duas técnicas complementares
+        para criar murais e intervenções artísticas únicas: o graffiti manual autêntico,
+        executado por artista profissional com formação em arquitetura, e a impressão
+        vertical avançada — tecnologia de ponta para imprimir designs de alta qualidade
+        diretamente em paredes.
+      </p>
+      <p class="reveal reveal-delay-3">
+        Esta fusão permite criar <strong>soluções visuais impossíveis de alcançar</strong> com
+        apenas uma técnica, oferecendo versatilidade total desde arte urbana pura até
+        branding corporativo sofisticado. Cada projeto começa com o entendimento profundo
+        do cliente e do espaço.
+      </p>
+      <div class="sobre-tags reveal reveal-delay-4">
+        <span class="tag">Graffiti Manual</span>
+        <span class="tag">Impressão Vertical</span>
+        <span class="tag">Visão Arquitetónica</span>
+        <span class="tag">Personalização Total</span>
+      </div>
+    </div>
+    <div class="sobre-visual reveal reveal-delay-2">
+      <div class="sobre-card">
+        <div class="sobre-card-quote">"</div>
+        <p class="sobre-card-text">
+          Entendemos o conceito do cliente e do espaço, e propomos algo que acrescenta valor real — não apenas decoração, mas uma identidade visual estratégica.
+        </p>
+        <div class="sobre-card-author">
+          Rui Rocha — Fundador, Wall Fusion
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SERVIÇOS -->
+<section id="servicos">
+  <div class="container">
+    <div class="servicos-header">
+      <div>
+        <span class="label reveal">O que fazemos</span>
+        <h2 class="section-title reveal reveal-delay-1">Serviços</h2>
+      </div>
+      <p class="reveal reveal-delay-2" style="max-width:320px;font-size:.88rem;font-weight:300;color:var(--text-muted);line-height:1.8;">
+        Da arte urbana autêntica ao branding corporativo sofisticado — cada solução é única e estratégica.
+      </p>
+    </div>
+    <div class="servicos-grid">
+
+      <div class="service-card reveal">
+        <span class="service-num">01</span>
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+        </div>
+        <h3>Graffiti Manual</h3>
+        <p>Arte urbana autêntica executada à mão por artista com formação em arquitetura. Cada peça é única, com a energia e autenticidade impossíveis de replicar digitalmente.</p>
+      </div>
+
+      <div class="service-card reveal reveal-delay-1">
+        <span class="service-num">02</span>
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h3>Impressão Vertical</h3>
+        <p>Tecnologia de ponta para impressão de alta qualidade diretamente em paredes. Projetos que levariam semanas são concluídos em dias, sem comprometer a qualidade.</p>
+      </div>
+
+      <div class="service-card reveal reveal-delay-2">
+        <span class="service-num">03</span>
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <h3>Branding Corporativo</h3>
+        <p>Logótipos de grande escala, campanhas publicitárias em parede e ativações de marca que criam experiências visuais memoráveis e geram engagement.</p>
+      </div>
+
+      <div class="service-card reveal reveal-delay-1">
+        <span class="service-num">04</span>
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <h3>Fachadas Comerciais</h3>
+        <p>Transforme a face do seu negócio num ponto de referência visual. Ideal para restaurantes, lojas e cafés que querem destacar-se na paisagem urbana.</p>
+      </div>
+
+      <div class="service-card reveal reveal-delay-2">
+        <span class="service-num">05</span>
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Interiores & Hotelaria</h3>
+        <p>Ambientes únicos que contam histórias, criam atmosfera e tornam-se instagrammable spots, atraindo clientes e gerando marketing orgânico.</p>
+      </div>
+
+      <div class="service-card reveal reveal-delay-3">
+        <span class="service-num">06</span>
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <h3>Murais Públicos</h3>
+        <p>Projetos para câmaras municipais, intervenções urbanas e iniciativas culturais que dignificam o espaço público e revitalizam espaços degradados.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- DIFERENCIAIS -->
+<section id="diferenciais">
+  <div class="container">
+    <div class="dif-sticky">
+      <span class="label reveal">Por que Wall Fusion</span>
+      <h2 class="section-title dif-title reveal reveal-delay-1">
+        Diferenciais<br>Competitivos
+      </h2>
+      <p class="dif-description reveal reveal-delay-2">
+        A combinação única de arte e tecnologia cria resultados impossíveis de alcançar com apenas uma abordagem.
+      </p>
+    </div>
+    <div class="dif-list">
+      <div class="dif-item reveal">
+        <span class="dif-num">01</span>
+        <div class="dif-content">
+          <h3>Rapidez de Execução</h3>
+          <p>A impressão vertical permite cobrir grandes áreas em tempo recorde, enquanto o graffiti adiciona detalhes e personalização ágil. Projetos que levariam semanas são concluídos em dias.</p>
+        </div>
+      </div>
+      <div class="dif-item reveal reveal-delay-1">
+        <span class="dif-num">02</span>
+        <div class="dif-content">
+          <h3>Durabilidade Profissional</h3>
+          <p>Materiais de alta qualidade e técnicas apropriadas garantem resistência a intempéries, UV e desgaste urbano. Murais que duram anos com mínima manutenção.</p>
+        </div>
+      </div>
+      <div class="dif-item reveal reveal-delay-2">
+        <span class="dif-num">03</span>
+        <div class="dif-content">
+          <h3>Personalização Total</h3>
+          <p>Formação em arquitetura e marketing permite compreender profundamente as necessidades do cliente e traduzir identidade de marca em soluções visuais únicas e estratégicas.</p>
+        </div>
+      </div>
+      <div class="dif-item reveal reveal-delay-3">
+        <span class="dif-num">04</span>
+        <div class="dif-content">
+          <h3>Versatilidade Extrema</h3>
+          <p>Do graffiti urbano autêntico ao branding corporativo sofisticado. Da intervenção artística pura à comunicação comercial. Adaptabilidade a qualquer contexto e objetivo.</p>
+        </div>
+      </div>
+      <div class="dif-item reveal reveal-delay-4">
+        <span class="dif-num">05</span>
+        <div class="dif-content">
+          <h3>Visão Arquitetónica</h3>
+          <p>Background em arquitetura permite integrar perfeitamente as intervenções com o espaço existente, respeitando proporções, linhas e funcionalidade — o resultado nunca parece sobreposto.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESSO -->
+<section id="processo">
+  <div class="container">
+    <div style="text-align:center;max-width:500px;margin:0 auto;">
+      <span class="label reveal" style="justify-content:center;">Como Trabalhamos</span>
+      <h2 class="section-title reveal reveal-delay-1" style="text-align:center;">Processo de Trabalho</h2>
+      <p class="reveal reveal-delay-2" style="margin-top:1rem;font-size:.9rem;font-weight:300;color:var(--text-muted);line-height:1.8;">
+        Da primeira reunião à entrega final, um processo claro e transparente.
+      </p>
+    </div>
+    <div class="processo-steps">
+      <div class="processo-step reveal">
+        <div class="step-num">01</div>
+        <span class="step-badge">Levantamento</span>
+        <h3>Análise do Espaço</h3>
+        <p>Visitamos o espaço, compreendemos o contexto, o negócio e o que o cliente quer transmitir. Esta fase é gratuita e sem compromisso.</p>
+      </div>
+      <div class="processo-step reveal reveal-delay-1">
+        <div class="step-num">02</div>
+        <span class="step-badge">Proposta</span>
+        <h3>Conceito Personalizado</h3>
+        <p>Desenvolvemos uma proposta visual exclusiva com maquetes, paleta de cores e definição da técnica ideal para o projeto e orçamento.</p>
+      </div>
+      <div class="processo-step reveal reveal-delay-2">
+        <div class="step-num">03</div>
+        <span class="step-badge">Execução</span>
+        <h3>Desenvolvimento</h3>
+        <p>Execução por profissional especializado. Preparação da superfície, aplicação e controlo de qualidade em cada fase do processo.</p>
+      </div>
+      <div class="processo-step reveal reveal-delay-3">
+        <div class="step-num">04</div>
+        <span class="step-badge">Entrega</span>
+        <h3>Obra Final</h3>
+        <p>Entrega com registo fotográfico profissional, acabamentos finais e acompanhamento pós-obra para garantir total satisfação.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PORTFÓLIO -->
+<section id="portfolio">
+  <div class="container">
+    <div class="portfolio-header">
+      <div>
+        <span class="label reveal">Casos de Sucesso</span>
+        <h2 class="section-title reveal reveal-delay-1">Portfólio</h2>
+      </div>
+      <p class="reveal reveal-delay-2" style="max-width:280px;font-size:.85rem;font-weight:300;color:var(--text-muted);line-height:1.8;">
+        Cada projeto é uma oportunidade de criar algo verdadeiramente único.
+      </p>
+    </div>
+    <div class="portfolio-grid reveal">
+
+      <div class="portfolio-item pf-grad-1">
+        <div class="pf-placeholder">WF</div>
+        <!-- Substituir src por URL Cloudinary: https://res.cloudinary.com/SEU_CLOUD/image/upload/v.../projeto-1.jpg -->
+        <img class="portfolio-img" src="" alt="Restaurante - Mural Principal" style="display:none;" loading="lazy">
+        <span class="portfolio-cat">Restauração</span>
+        <div class="portfolio-overlay">
+          <span>Fachada Comercial</span>
+          <h3>Restaurante Casa do Graffiti</h3>
+        </div>
+      </div>
+
+      <div class="portfolio-item pf-grad-2">
+        <div class="pf-placeholder">WF</div>
+        <img class="portfolio-img" src="" alt="Escritório Corporativo" style="display:none;" loading="lazy">
+        <span class="portfolio-cat">Corporativo</span>
+        <div class="portfolio-overlay">
+          <span>Interior Corporativo</span>
+          <h3>Tech Office Branding</h3>
+        </div>
+      </div>
+
+      <div class="portfolio-item pf-grad-3">
+        <div class="pf-placeholder">WF</div>
+        <img class="portfolio-img" src="" alt="Mural Urbano" style="display:none;" loading="lazy">
+        <span class="portfolio-cat">Público</span>
+        <div class="portfolio-overlay">
+          <span>Mural Urbano</span>
+          <h3>Intervenção Centro Histórico</h3>
+        </div>
+      </div>
+
+      <div class="portfolio-item pf-grad-4">
+        <div class="pf-placeholder">WF</div>
+        <img class="portfolio-img" src="" alt="Hotel - Lobby" style="display:none;" loading="lazy">
+        <span class="portfolio-cat">Hotelaria</span>
+        <div class="portfolio-overlay">
+          <span>Lobby Hotel</span>
+          <h3>Boutique Hotel Entrada</h3>
+        </div>
+      </div>
+
+      <div class="portfolio-item pf-grad-5">
+        <div class="pf-placeholder">WF</div>
+        <img class="portfolio-img" src="" alt="Loja Conceito" style="display:none;" loading="lazy">
+        <span class="portfolio-cat">Retalho</span>
+        <div class="portfolio-overlay">
+          <span>Loja Conceito</span>
+          <h3>Pop-up Store Experiencial</h3>
+        </div>
+      </div>
+
+      <div class="portfolio-item pf-grad-6">
+        <div class="pf-placeholder">WF</div>
+        <img class="portfolio-img" src="" alt="Branding Mural" style="display:none;" loading="lazy">
+        <span class="portfolio-cat">Branding</span>
+        <div class="portfolio-overlay">
+          <span>Branding Mural</span>
+          <h3>Logótipo Escala Monumental</h3>
+        </div>
+      </div>
+
+    </div>
+    <div style="text-align:center;margin-top:2.5rem;" class="reveal">
+      <a href="#contacto" class="btn-outline">Falar sobre o seu projeto →</a>
+    </div>
+  </div>
+</section>
+
+<!-- TESTEMUNHOS -->
+<section id="testemunhos">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:3.5rem;">
+      <span class="label reveal" style="justify-content:center;">O Que Dizem</span>
+      <h2 class="section-title reveal reveal-delay-1" style="text-align:center;">Clientes</h2>
+    </div>
+    <div class="tst-grid">
+
+      <div class="tst-card reveal">
+        <span class="tst-stars">★★★★★</span>
+        <span class="tst-quote-icon">"</span>
+        <p class="tst-text">O resultado superou todas as expectativas. O Rui compreendeu exatamente o que queríamos transmitir e transformou a fachada do nosso restaurante num verdadeiro ponto de atração. As pessoas param para fotografar todos os dias.</p>
+        <div class="tst-author">
+          <div class="tst-avatar">AM</div>
+          <div class="tst-info">
+            <span class="tst-name">Ana Martins</span>
+            <span class="tst-role">Proprietária, Restaurante Âncora</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tst-card reveal reveal-delay-1">
+        <span class="tst-stars">★★★★★</span>
+        <span class="tst-quote-icon">"</span>
+        <p class="tst-text">Procurámos algo diferente para o nosso escritório e a Wall Fusion entregou exatamente isso. O mural na sala de reuniões comunica perfeitamente a nossa cultura de empresa e impressiona todos os visitantes.</p>
+        <div class="tst-author">
+          <div class="tst-avatar">JP</div>
+          <div class="tst-info">
+            <span class="tst-name">João Pinto</span>
+            <span class="tst-role">CEO, Grupo Inovação Digital</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tst-card reveal reveal-delay-2">
+        <span class="tst-stars">★★★★★</span>
+        <span class="tst-quote-icon">"</span>
+        <p class="tst-text">A combinação de graffiti com impressão digital foi uma solução genial para o nosso lobby. Ficou com uma estética única — sofisticado mas com alma. O tempo de execução foi impressionante para a dimensão do projeto.</p>
+        <div class="tst-author">
+          <div class="tst-avatar">SC</div>
+          <div class="tst-info">
+            <span class="tst-name">Sofia Carvalho</span>
+            <span class="tst-role">Diretora, Boutique Hotel Minho</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto">
+  <div class="container">
+    <div class="contacto-inner">
+      <div class="contacto-left">
+        <span class="label reveal">Vamos Colaborar</span>
+        <h2 class="section-title reveal reveal-delay-1">
+          Vamos transformar<br>o seu espaço?
+        </h2>
+        <p class="reveal reveal-delay-2">
+          Cada projeto começa com uma conversa. Conte-nos sobre o seu espaço, o seu negócio e o que quer transmitir. A consulta inicial é gratuita e sem compromisso.
+        </p>
+        <div class="contact-info reveal reveal-delay-3">
+          <div class="contact-info-item">
+            <div class="contact-info-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <a href="mailto:wallfusionpt@gmail.com">wallfusionpt@gmail.com</a>
+          </div>
+          <div class="contact-info-item">
+            <div class="contact-info-icon">
+              <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.4 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </div>
+            <a href="tel:+351939093431">939 093 431</a>
+          </div>
+          <div class="contact-info-item">
+            <div class="contact-info-icon">
+              <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+            </div>
+            <a href="https://instagram.com/wallfusion" target="_blank" rel="noopener">@wallfusion</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="reveal reveal-delay-2">
+        <form class="contact-form" id="contactForm" onsubmit="handleSubmit(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="nome">Nome</label>
+              <input type="text" id="nome" name="nome" placeholder="O seu nome" required>
+            </div>
+            <div class="form-group">
+              <label for="empresa">Empresa</label>
+              <input type="text" id="empresa" name="empresa" placeholder="Nome da empresa">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" name="email" placeholder="email@empresa.com" required>
+            </div>
+            <div class="form-group">
+              <label for="telefone">Telefone</label>
+              <input type="tel" id="telefone" name="telefone" placeholder="9XX XXX XXX">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="tipo">Tipo de Projeto</label>
+            <select id="tipo" name="tipo">
+              <option value="">Selecione o tipo de projeto</option>
+              <option value="fachada">Fachada Comercial</option>
+              <option value="interior">Interior Corporativo</option>
+              <option value="hotelaria">Hotelaria & Restauração</option>
+              <option value="publico">Mural Público</option>
+              <option value="branding">Branding Empresarial</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="mensagem">Mensagem</label>
+            <textarea id="mensagem" name="mensagem" placeholder="Descreva o seu espaço e o que pretende. Inclua dimensões se souber." required></textarea>
+          </div>
+          <label class="form-check">
+            <input type="checkbox" name="consulta" checked>
+            <span class="form-check-text"><strong>Quero agendar uma consulta inicial gratuita.</strong> Visitamos o espaço, analisamos as necessidades e apresentamos uma proposta personalizada sem compromisso.</span>
+          </label>
+          <div class="form-submit">
+            <button type="submit" class="btn-submit">Enviar Mensagem →</button>
+          </div>
+        </form>
+        <div id="formSuccess" style="display:none;text-align:center;padding:3rem 2rem;background:var(--bg-2);border:1px solid var(--border-acc);border-radius:4px;">
+          <div style="font-size:2rem;margin-bottom:1rem;">✓</div>
+          <h3 style="font-family:var(--font-d);font-size:1.2rem;color:var(--accent);margin-bottom:.5rem;">Mensagem enviada!</h3>
+          <p style="font-size:.88rem;color:var(--text-muted);font-weight:300;">Entraremos em contacto em até 24 horas.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <a href="#" class="footer-logo">WALL<span>F</span>USION</a>
+    <ul class="footer-links">
+      <li><a href="#sobre">Sobre</a></li>
+      <li><a href="#servicos">Serviços</a></li>
+      <li><a href="#processo">Processo</a></li>
+      <li><a href="#portfolio">Portfólio</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+    <div class="footer-social">
+      <a href="https://instagram.com/wallfusion" target="_blank" rel="noopener" class="social-btn" aria-label="Instagram">
+        <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      </a>
+      <a href="mailto:wallfusionpt@gmail.com" class="social-btn" aria-label="Email">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </a>
+      <a href="tel:+351939093431" class="social-btn" aria-label="Telefone">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.4 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      </a>
+    </div>
+    <div class="footer-copy">
+      © 2026 Wall Fusion · Graffiti & Impressão Vertical · wallfusion.blog
+    </div>
+  </div>
+</footer>
+
+<script>
+  /* ── CURSOR ── */
+  const cur = document.getElementById('cur');
+  const curF = document.getElementById('cur-f');
+  let mx = 0, my = 0, fx = 0, fy = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animateCursor() {
+    fx += (mx - fx) * 0.12;
+    fy += (my - fy) * 0.12;
+    if (cur) { cur.style.left = mx + 'px'; cur.style.top = my + 'px'; }
+    if (curF) { curF.style.left = fx + 'px'; curF.style.top = fy + 'px'; }
+    requestAnimationFrame(animateCursor);
+  }
+  if (window.innerWidth > 700) animateCursor();
+
+  /* ── NAV SCROLL ── */
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 50);
+  }, { passive: true });
+
+  /* ── MOBILE MENU ── */
+  const burger = document.getElementById('navBurger');
+  const navMobile = document.getElementById('navMobile');
+  const navClose = document.getElementById('navClose');
+  burger.addEventListener('click', () => navMobile.classList.add('open'));
+  navClose.addEventListener('click', () => navMobile.classList.remove('open'));
+  function closeMobileMenu() { navMobile.classList.remove('open'); }
+
+  /* ── SCROLL REVEAL ── */
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(el => observer.observe(el));
+
+  /* ── HERO IMMEDIATE REVEAL ── */
+  window.addEventListener('load', () => {
+    document.querySelectorAll('#hero .reveal').forEach(el => {
+      setTimeout(() => el.classList.add('visible'), 100);
+    });
+  });
+
+  /* ── PORTFOLIO: show img if src is set, else show gradient ── */
+  document.querySelectorAll('.portfolio-item').forEach(item => {
+    const img = item.querySelector('.portfolio-img');
+    if (img && img.src && img.src !== window.location.href) {
+      img.style.display = 'block';
+      img.previousElementSibling.style.display = 'none';
+    }
+  });
+
+  /* ── CONTACT FORM ── */
+  function handleSubmit(e) {
+    e.preventDefault();
+    const form = document.getElementById('contactForm');
+    const success = document.getElementById('formSuccess');
+    const nome = document.getElementById('nome').value;
+    const email = document.getElementById('email').value;
+    const tipo = document.getElementById('tipo').value;
+    const mensagem = document.getElementById('mensagem').value;
+    const consulta = document.querySelector('input[name="consulta"]').checked;
+
+    // Build mailto link
+    const subject = encodeURIComponent('Wall Fusion — Pedido de Projeto' + (tipo ? ` (${tipo})` : ''));
+    const body = encodeURIComponent(
+      `Nome: ${nome}\nEmail: ${email}\n` +
+      `Empresa: ${document.getElementById('empresa').value}\n` +
+      `Telefone: ${document.getElementById('telefone').value}\n` +
+      `Tipo: ${tipo}\n` +
+      `Consulta gratuita: ${consulta ? 'Sim' : 'Não'}\n\n` +
+      `Mensagem:\n${mensagem}`
+    );
+    window.location.href = `mailto:wallfusionpt@gmail.com?subject=${subject}&body=${body}`;
+
+    form.style.display = 'none';
+    success.style.display = 'block';
+  }
+
+  /* ── SMOOTH SCROLL ── */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  /* ── PROCESSO STEP ACTIVE ON SCROLL ── */
+  const steps = document.querySelectorAll('.processo-step');
+  const stepObserver = new IntersectionObserver(entries => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) entry.target.classList.add('active');
+    });
+  }, { threshold: 0.5 });
+  steps.forEach(s => stepObserver.observe(s));
+</script>
+</body>
+</html>
